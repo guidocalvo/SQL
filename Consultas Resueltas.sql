@@ -6,7 +6,7 @@ where rating = 'R';
 -- 3. Encuentra los nombres de los actores que tengan un “actor_id” entre 30 y 40.
 select  CONCAT(a.first_name, ' ', a.last_name) as actor
 from actor a 
-where "actor_id" between 30 and 40;
+where actor_id between 30 and 40;
 
 -- 4. Obtén las películas cuyo idioma coincide con el idioma original.
 select title as pelicula
@@ -21,17 +21,17 @@ order by length asc;
 -- 6. Encuentra el nombre y apellido de los actores que tengan ‘Allen’ en su apellido.
 select  CONCAT(a.first_name, ' ', a.last_name) as actor
 from actor a 
-where last_name = 'ALLEN';
+where a.last_name ilike '%ALLEN%';
 
 -- 7. Encuentra la cantidad total de películas en cada clasificación de la tabla “film” y muestra la clasificación junto con el recuento.
-select rating as clasificacion, COUNT(rating)
+select rating as clasificacion, COUNT(rating) as total
 from film f 
 group by rating;
 
 -- 8. Encuentra el título de todas las películas que son ‘PG-13’ o tienen una duración mayor a 3 horas en la tabla film.
 select title as pelicula
 from film f
-where rating = 'PG-13' or length > '180';
+where rating = 'PG-13' or length > 180;
 
 -- 9. Encuentra la variabilidad de lo que costaría reemplazar las películas.
 select round(variance(replacement_cost),2) as costo
@@ -60,7 +60,7 @@ group by rating;
 -- 14. Encuentra el título de todas las películas que tengan una duración mayor a 180 minutos.
 select title as pelicula
 from film f
-where length > '180';
+where length > 180;
 
 -- 15. ¿Cuánto dinero ha generado en total la empresa?
 select SUM(amount) as dinero_total
@@ -77,24 +77,26 @@ select  CONCAT(a.first_name, ' ', a.last_name) as actor
 from actor a
 join film_actor fa on a.actor_id = fa.actor_id
 join film f on f.film_id = fa.film_id
-where f.title = 'EGG IGBY';
+where f.title ilike 'EGG IGBY';
 
 -- 18. Selecciona todos los nombres de las películas únicos.
-select distinct on ("title") title as pelicula
+select distinct title as pelicula
 from film f
 order by title;
 
 --  19. Encuentra el título de las películas que son comedias y tienen una duración mayor a 180 minutos en la tabla “film”.
-select title as peicula
+select title as pelicula
 from film f
 join film_category fc on fc.film_id  = f.film_id
 join category c on c.category_id = fc.category_id
 where c.name = 'Comedy' and f.length > '180';
 
 -- 20. Encuentra las categorías de películas que tienen un promedio de duración superior a 110 minutos y muestra el nombre de la categoría junto con el promedio de duración.
-select rating as clasificacion, round(AVG(length),0) as promedio_de_duracion
-from film f 
-group by rating
+select c.name as Categoria, round(AVG(length),0) as promedio_de_duracion
+from film f
+join film_category fc on fc.film_id  = f.film_id
+join category c on c.category_id = fc.category_id
+group by c."name"
 having AVG(length) > 110;
 
 -- 21. ¿Cuál es la media de duración del alquiler de las películas?
@@ -123,7 +125,6 @@ from rental
 group by mes
 order by mes;
 
-
 -- 26. Encuentra el promedio, la desviación estándar y varianza del total pagado.
 select AVG(amount) as promedio, stddev(amount) as desviacion_standard, variance(amount) as varianza_del_total_pagado
 from payment p;
@@ -131,7 +132,7 @@ from payment p;
 -- 27. ¿Qué películas se alquilan por encima del precio medio?
 select title as pelicula
 from film f
-where (rental_duration / rental_rate) > (select AVG(rental_duration / rental_rate) from film f);
+where rental_rate > (select AVG(rental_rate) from film f);
 
 -- 28. Muestra el id de los actores que hayan participado en más de 40 películas.
 select actor_id, COUNT(actor_id) as cantidad_de_peliculas
@@ -189,7 +190,7 @@ limit 5;
 -- 35. Selecciona todos los actores cuyo primer nombre es 'Johnny'.
 select CONCAT(a.first_name, ' ', a.last_name) as actor
 from actor a 
-where first_name = 'JOHNNY';
+where first_name ilike '%JOHNNY%';
 
 -- 36. Renombra la columna “first_name” como Nombre y “last_name” como Apellido.
 select first_name as Nombre, last_name as Apellido
@@ -380,7 +381,7 @@ where r.rental_date > (
     from rental r
     join inventory i on r.inventory_id = i.inventory_id
     join film f on i.film_id = f.film_id
-    where f.title = 'SPARTACUS CHEAPER'
+    where f.title ilike '%SPARTACUS CHEAPER%'
 )
 -- Ordenamos alfabéticamente por apellido
 order by a.last_name asc;
@@ -388,11 +389,11 @@ order by a.last_name asc;
 -- 56. Encuentra el nombre y apellido de los actores que no han actuado en ninguna película de la categoría ‘Music’.
 select distinct last_name as apellido, first_name as nombre
 from actor a
-join film_actor fa on a.actor_id = fa.actor_id
-join film f on fa.film_id = f.film_id
-join film_category fc on f.film_id = fc.film_id
-join category c on fc.category_id = c.category_id
-where c.name <> 'Music';
+left join film_actor fa on a.actor_id = fa.actor_id
+left join film f on fa.film_id = f.film_id
+left join film_category fc on f.film_id = fc.film_id
+left join category c on fc.category_id = c.category_id and c.name = 'Music'
+where c.category_id is NULL;
 
 -- 57. Encuentra el título de todas las películas que fueron alquiladas por más de 8 días.
 select distinct f.title as pelicula
@@ -418,7 +419,7 @@ where f.length in (
     -- subconsulta: obtenemos la duración (length) de la película 'dancing fever'
     select f.length
     from film f
-    where f.title = 'DANCING FEVER'
+    where f.title ilike '%DANCING FEVER%'
 )
 -- ordenamos los resultados alfabéticamente por título
 order by title asc;
